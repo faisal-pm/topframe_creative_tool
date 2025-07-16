@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  creatives Creative[]
+  campaigns Campaign[]
+  
+  @@map("users")
+}
+
+model Creative {
+  id          String   @id @default(cuid())
+  name        String
+  width       Int      @default(1)
+  height      Int      @default(1)
+  content     String   // HTML/CSS content
+  assets      Json?    // Asset URLs and metadata
+  script      String?  // Generated injection script
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  campaigns   Campaign[]
+  analytics   Analytics[]
+  
+  @@map("creatives")
+}
+
+model Campaign {
+  id          String   @id @default(cuid())
+  name        String
+  gamAdUnitId String?  // Google Ad Manager unit ID
+  targeting   Json?    // Targeting parameters
+  schedule    Json?    // Schedule settings
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  creativeId  String
+  creative    Creative @relation(fields: [creativeId], references: [id])
+  analytics   Analytics[]
+  
+  @@map("campaigns")
+}
+
+model Analytics {
+  id           String   @id @default(cuid())
+  impressions  Int      @default(0)
+  clicks       Int      @default(0)
+  ctr          Float    @default(0)
+  viewability  Float    @default(0)
+  date         DateTime @default(now())
+  
+  creativeId   String
+  creative     Creative @relation(fields: [creativeId], references: [id])
+  campaignId   String
+  campaign     Campaign @relation(fields: [campaignId], references: [id])
+  
+  @@map("analytics")
+}

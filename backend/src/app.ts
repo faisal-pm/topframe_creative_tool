@@ -1,10 +1,14 @@
+// backend/src/app.ts
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import dotenv from 'dotenv';
 import { supabase } from './config/supabase';
+
+// Correctly import all routers using ESM 'import'
 import authRouter from './routes/auth';
+import creativeRoutes from './routes/creatives'; // <-- THIS LINE WAS MISSING
 
 const app = express();
 
@@ -23,11 +27,11 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// API Routes (will add these next)
+// API Routes
 app.use('/api/auth', authRouter);
-// app.use('/api/creatives', require('./routes/creatives'));
-// app.use('/api/campaigns', require('./routes/campaigns'));
-// app.use('/api/analytics', require('./routes/analytics'));
+app.use('/api/creatives', creativeRoutes); // <-- This line is now correct
+
+// ... (rest of the file is the same) ...
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -41,4 +45,3 @@ app.use('*', (req, res) => {
 });
 
 export default app;
-export { supabase };

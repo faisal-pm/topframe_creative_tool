@@ -4,11 +4,10 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import { supabase } from './config/supabase';
 
-// Correctly import all routers using ESM 'import'
-import authRouter from './routes/auth';
-import creativeRoutes from './routes/creatives'; // <-- THIS LINE WAS MISSING
+// Correctly import the named router
+import { authRouter } from './routes/auth';
+// const creativeRoutes = require('./routes/creatives'); // keep this commented for now
 
 const app = express();
 
@@ -28,20 +27,9 @@ app.get('/health', (req, res) => {
 });
 
 // API Routes
-app.use('/api/auth', authRouter);
-app.use('/api/creatives', creativeRoutes); // <-- This line is now correct
+app.use('/api/auth', authRouter); // This now uses the named import
+// app.use('/api/creatives', creativeRoutes);
 
 // ... (rest of the file is the same) ...
-
-// Error handling middleware
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
-});
-
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
 
 export default app;

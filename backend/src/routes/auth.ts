@@ -5,10 +5,13 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { supabase } from '../config/supabase';
 
-const router = Router();
+// Create and export the router directly
+export const authRouter = Router();
+
+// --- All routes now use 'authRouter' instead of 'router' ---
 
 // Register
-router.post('/register', async (req, res) => {
+authRouter.post('/register', async (req, res) => {
   try {
     const { email, password, name } = req.body;
 
@@ -55,6 +58,48 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// All other routes like /login and /me can be added here later
+// Login
+authRouter.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-export default router;
+    // Find user
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (error || !user) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Check password
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Generate JWT
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      process.env.JWT_SECRET!,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name
+      }
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// NOTE: We no longer need an export line at the end of the file.
